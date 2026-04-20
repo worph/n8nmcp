@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>n8n MCP</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+  pre.code { white-space: pre-wrap; word-break: break-all; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+<div class="max-w-3xl mx-auto p-6 space-y-6">
+
+  <header class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold">n8n MCP</h1>
+      <p class="text-sm text-slate-500">Expose your n8n workflows to LLMs via the Model Context Protocol</p>
+    </div>
+    <div id="status-pill" class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">…</div>
+  </header>
+
+  <!-- Setup instructions -->
+  <section class="bg-white border border-slate-200 rounded-lg p-5 space-y-3">
+    <h2 class="text-lg font-semibold">Setup</h2>
+    <ol class="text-sm text-slate-700 space-y-2 list-decimal list-inside">
+      <li>Open n8n → <b>Settings → n8n API → Create API Key</b>.</li>
+      <li>Copy the key and paste it into the form below.</li>
+      <li>Click <b>Test connection</b>, then <b>Save</b>.</li>
+      <li>Add the MCP endpoint to your LLM (see the snippets at the bottom).</li>
+    </ol>
+  </section>
+
+  <!-- Config form -->
+  <section class="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+    <h2 class="text-lg font-semibold">Connection</h2>
+
+    <div class="space-y-1">
+      <label for="base-url" class="text-sm font-medium">n8n Base URL</label>
+      <input id="base-url" type="text" placeholder="http://n8n:80 or https://n8n.example.com"
+             class="w-full text-sm px-3 py-2 border border-slate-300 rounded font-mono" />
+      <p class="text-xs text-slate-500">We'll append <code>/api/v1</code> automatically if you leave it off.</p>
+    </div>
+
+    <div class="space-y-1">
+      <label for="api-key" class="text-sm font-medium">n8n API Key</label>
+      <input id="api-key" type="password" autocomplete="off" placeholder="paste key here"
+             class="w-full text-sm px-3 py-2 border border-slate-300 rounded font-mono" />
+      <p class="text-xs text-slate-500">Stored locally in the container's mounted <code>data/</code> volume. Never logged.</p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button id="btn-test" class="px-3 py-1.5 text-sm font-medium rounded bg-slate-200 text-slate-800 hover:bg-slate-300">Test connection</button>
+      <button id="btn-save" class="px-3 py-1.5 text-sm font-medium rounded bg-black text-white hover:bg-slate-800">Save</button>
+      <span id="test-result" class="text-sm"></span>
+    </div>
+  </section>
+
+  <!-- Connect an LLM -->
+  <section class="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+    <h2 class="text-lg font-semibold">Connect an LLM</h2>
+
+    <div class="space-y-1">
+      <div class="text-sm text-slate-700 font-medium">MCP Endpoint</div>
+      <div class="flex items-center gap-2">
+        <code id="mcp-url" class="flex-1 text-xs bg-slate-100 px-3 py-2 rounded border border-slate-200 font-mono break-all"></code>
+        <button data-copy="mcp-url" class="text-xs px-2 py-2 bg-slate-200 rounded hover:bg-slate-300">Copy</button>
+      </div>
+    </div>
+
+    <div class="space-y-1">
+      <div class="text-sm text-slate-700 font-medium">Claude Code (direct)</div>
+      <div class="flex items-center gap-2">
+        <code id="snippet-claude" class="flex-1 text-xs bg-slate-100 px-3 py-2 rounded border border-slate-200 font-mono break-all"></code>
+        <button data-copy="snippet-claude" class="text-xs px-2 py-2 bg-slate-200 rounded hover:bg-slate-300">Copy</button>
+      </div>
+    </div>
+
+    <div class="space-y-1">
+      <div class="text-sm text-slate-700 font-medium">Claude Code (via Beacon aggregator)</div>
+      <div class="flex items-center gap-2">
+        <code id="snippet-beacon" class="flex-1 text-xs bg-slate-100 px-3 py-2 rounded border border-slate-200 font-mono break-all">claude mcp add beacon --transport http http://localhost:9300/mcp/</code>
+        <button data-copy="snippet-beacon" class="text-xs px-2 py-2 bg-slate-200 rounded hover:bg-slate-300">Copy</button>
+      </div>
+      <p class="text-xs text-slate-500">Use this if you're running the Beacon aggregator — it auto-discovers this server and proxies every MCP in one entry.</p>
+    </div>
+  </section>
+
+  <div id="toast" class="fixed bottom-4 right-4 max-w-sm p-3 rounded shadow-lg text-sm hidden"></div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

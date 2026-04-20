@@ -1,0 +1,25 @@
+services:
+  n8nmcp:
+    build: .
+    container_name: n8n-mcp
+    hostname: n8nmcp
+    ports:
+      - "9640:9640"
+      - "9099:9099/udp"
+    volumes:
+      - ./data:/app/wrapper-data:rw
+    environment:
+      - NODE_ENV=production
+      - PORT=9640
+      - UPSTREAM_PORT=3000
+      - DISCOVERY_PORT=9099
+      # Optional — pre-seed on first boot; the Web UI can override afterwards.
+      # - N8N_BASE_URL=http://n8n:80
+      # - N8N_API_KEY=
+    restart: unless-stopped
+    networks:
+      - mcp-net
+
+networks:
+  mcp-net:
+    external: true

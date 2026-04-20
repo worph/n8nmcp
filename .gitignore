@@ -1,0 +1,7 @@
+node_modules/
+dist/
+data/config.json
+data/upstream.env
+*.log
+.DS_Store
+.claude/settings.local.json
