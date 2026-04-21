@@ -26,5 +26,6 @@ export interface StatusResponse {
   configured: boolean;
   upstreamHealthy: boolean;
   n8nBaseUrl: string;
+  toolCount?: number;
   lastError?: string;
 }

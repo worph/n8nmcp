@@ -1,13 +1,18 @@
 /**
  * UDP discovery responder — lets MCP servers announce themselves to the Beacon aggregator.
  * Ported from ../beacon/sdk/node/mcp-announce.js to ESM.
+ *
+ * The manifest is rebuilt on every incoming discovery request so that `tools`
+ * reflects the current upstream state — the upstream may not be ready (or even
+ * configured) at boot, and we want later refreshes to propagate without a
+ * process restart.
  */
 import * as dgram from "dgram";
 
 export interface DiscoveryResponderOptions {
   name: string;
   description: string;
-  tools: unknown[];
+  getTools: () => unknown[];
   port: number;
   path?: string;
   listenPort?: number;
@@ -15,16 +20,18 @@ export interface DiscoveryResponderOptions {
 }
 
 export function createDiscoveryResponder(opts: DiscoveryResponderOptions): dgram.Socket {
-  const payload: Record<string, unknown> = {
-    type: "announce",
-    name: opts.name,
-    description: opts.description,
-    tools: opts.tools,
-    port: opts.port,
+  const buildManifest = (): string => {
+    const payload: Record<string, unknown> = {
+      type: "announce",
+      name: opts.name,
+      description: opts.description,
+      tools: opts.getTools(),
+      port: opts.port,
+    };
+    if (opts.path) payload.path = opts.path;
+    if (opts.auth) payload.auth = opts.auth;
+    return JSON.stringify(payload);
   };
-  if (opts.path) payload.path = opts.path;
-  if (opts.auth) payload.auth = opts.auth;
-  const manifest = JSON.stringify(payload);
 
   const listenPort = opts.listenPort ?? 9099;
   const socket = dgram.createSocket({ type: "udp4", reuseAddr: true });
@@ -33,7 +40,17 @@ export function createDiscoveryResponder(opts: DiscoveryResponderOptions): dgram
     try {
       const msg = JSON.parse(data.toString());
       if (msg.type === "discovery") {
-        console.log(`Discovery request from ${rinfo.address}:${rinfo.port}, announcing`);
+        const manifest = buildManifest();
+        const toolCount = (() => {
+          try {
+            return (JSON.parse(manifest).tools as unknown[]).length;
+          } catch {
+            return 0;
+          }
+        })();
+        console.log(
+          `Discovery request from ${rinfo.address}:${rinfo.port}, announcing (${toolCount} tools)`,
+        );
         socket.send(manifest, rinfo.port, rinfo.address);
       }
     } catch {

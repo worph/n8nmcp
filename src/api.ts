@@ -18,6 +18,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export interface ApiDependencies {
   getConfig: () => Config;
   onConfigUpdated: (cfg: Config) => Promise<void>;
+  getTools: () => unknown[];
 }
 
 export function createApi(deps: ApiDependencies): express.Application {
@@ -110,8 +111,13 @@ function createApiRouter(deps: ApiDependencies): Router {
       configured,
       upstreamHealthy,
       n8nBaseUrl: cfg.n8n.baseUrl,
+      toolCount: deps.getTools().length,
     };
     res.json(response);
+  });
+
+  router.get("/tools", (_req: Request, res: Response) => {
+    res.json({ tools: deps.getTools() });
   });
 
   return router;
